@@ -1,41 +1,73 @@
 
-┌──────────────────────────────────────────────────────────┐
-│ +======================================================+ │
-│ |   CodeGuard - AI Code Review & Refactoring Agent  |    │
-│ |   Powered by Claude API / Multi-Agent Pipeline      |  │
-│ +======================================================+ │
-└──────────────────────────────────────────────────────────┘
+  ==================================================================
+  ||  CodeGuard Agent v1.0.0
+  ||  AI-Powered Code Review & Refactoring System
+  ||  Pipeline: Scanner -> Analyzer -> Refactor -> Validator
+  ==================================================================
 
-  Target: D:\xiaomi\codeguard-agent\demo\sample_project
-  Mode: DEMO (Simulated AI multi-agent pipeline)
-  Pipeline: Scanner → Analyzer → Refactor → Validator
+  Target : D:\xiaomi\codeguard-agent\demo\sample_project
+  Mode   : DEMO (Simulated Multi-Agent AI)
 
-  ╔══ Stage 1: Scanner Agent ═════════════════════╗
+  STAGE 1/4 -- SCANNER AGENT
+  ====================================================================
+  Task: Scan codebase for 12 technical debt patterns
+
 
   > Scanner Agent Scanning codebase for technical debt patterns...
   ------------------------------------------------------------
-  [OK] Scanner Agent completed -- 34 findings -- 0.02s
+  [OK] Scanner Agent completed -- 32 findings -- 0.01s
+  Files scanned    : 4
+  Issues detected  : 32
+    CRITICAL: 7 (security, bare except)
+    HIGH    : 11 (long methods, deep nesting)
+    MEDIUM  : 5 (params, mutable args)
+    LOW     : 9 (TODOs, unused imports)
 
-  Findings: 7 critical · 13 high · 5 medium · 9 low
-  Total: 34 issues detected
+  [FILE] payment.py (9 issues)
+    [critical] Bare Except Clause             line   16
+    [     low] Unresolved TODO/FIXME          line   35
+    [     low] Unresolved TODO/FIXME          line   36
+    [     low] Unresolved TODO/FIXME          line   37
+    [    high] Deeply Nested Code             line    1
+    [    high] Deeply Nested Code             line    4
+    [  medium] Too Many Parameters            line   20
+    [    high] Deeply Nested Code             line   24
+    [critical] Hardcoded Secret               line   12
+  [FILE] user_service.py (14 issues)
+    [critical] Bare Except Clause             line   29
+    [critical] Bare Except Clause             line   67
+    [critical] SQL Injection Risk             line   18
+    [     low] Unresolved TODO/FIXME          line   57
+    [     low] Unresolved TODO/FIXME          line   58
+    [     low] Unresolved TODO/FIXME          line   59
+    [    high] Deeply Nested Code             line    1
+    [    high] Deeply Nested Code             line   10
+    [  medium] Too Many Parameters            line   21
+    [    high] Deeply Nested Code             line   33
+    [  medium] Mutable Default Argument       line   53
+    [    high] Deeply Nested Code             line   37
+    [    high] Deeply Nested Code             line   38
+    [critical] SQL Injection Risk             line   34
+  [FILE] utils.py (9 issues)
+    [critical] Bare Except Clause             line   54
+    [     low] Unresolved TODO/FIXME          line   59
+    [     low] Unresolved TODO/FIXME          line   60
+    [     low] Unresolved TODO/FIXME          line   61
+    [    high] Deeply Nested Code             line    1
+    [  medium] Mutable Default Argument       line   31
+    [  medium] Too Many Parameters            line   39
+    [    high] Deeply Nested Code             line   39
+    [    high] Deeply Nested Code             line   43
 
-    [CRITICAL] Bare Except Clause — payment.py:16
-      Catch specific exceptions: except (ValueError, KeyError) as e:
-    [LOW] Unresolved TODO/FIXME — payment.py:35
-      Review and either complete the task or create a ticket.
-    [LOW] Unresolved TODO/FIXME — payment.py:36
-      Review and either complete the task or create a ticket.
-    [LOW] Unresolved TODO/FIXME — payment.py:37
-      Review and either complete the task or create a ticket.
-    [HIGH] Deeply Nested Code — payment.py:1
-      Use guard clauses to flatten nesting.
-    ... and 29 more
 
-  ╔══ Stage 2: Analyzer Agent ════════════════════╗
+  STAGE 2/4 -- ANALYZER AGENT
+  ====================================================================
+  Task: Compute risk scores, perform impact analysis, rank by priority
+
 
   > Analyzer Agent Evaluating impact, risk, and fix priority...
   ------------------------------------------------------------
-  [OK] Analyzer Agent completed -- 34 findings -- 0.00s
+  [OK] Analyzer Agent completed -- 32 findings -- 0.00s
     * CRITICAL SQL Injection Risk in user_service.py:34
       -> [Risk: 18.8] Use parameterized queries.
     * CRITICAL Bare Except Clause in utils.py:54
@@ -50,24 +82,31 @@ as e:
     * CRITICAL SQL Injection Risk in user_service.py:18
       -> [Risk: 17.0] Use parameterized queries with placeholders: 
 cursor.execute('SELECT ...', (param
+  Total Risk Score  : 202.9
+  Auto-fixable      : 8 issues
+  Manual only       : 24 issues
 
-  Risk Score: 214.2
-  Auto-fixable: 8 issues
+  Top 5 Risks (by computed risk score):
+    #1 [critical] SQL Injection Risk           risk=18.8  user_service.py:34
+        Impact: High blast radius - affects authentication flow
+    #2 [critical] Bare Except Clause           risk=18.6  utils.py:54
+        Impact: High blast radius - affects authentication flow
+    #3 [critical] Bare Except Clause           risk=18.4  payment.py:16
+        Impact: High blast radius - affects authentication flow
+    #4 [critical] Bare Except Clause           risk=17.8  user_service.py:29
+        Impact: High blast radius - affects authentication flow
+    #5 [critical] SQL Injection Risk           risk=17.0  user_service.py:18
+        Impact: High blast radius - affects authentication flow
 
-  Top Risks:
-    🔴  SQL Injection Risk — Risk: 18.8
-      File: user_service.py:34 | High blast radius - affects authentication 
-flow
-    🔴  Bare Except Clause — Risk: 18.6
-      File: utils.py:54 | High blast radius - affects authentication flow
-    🔴  Bare Except Clause — Risk: 18.4
-      File: payment.py:16 | High blast radius - affects authentication flow
 
-  ╔══ Stage 3: Refactor Agent ════════════════════╗
+  STAGE 3/4 -- REFACTOR AGENT
+  ====================================================================
+  Task: Generate auto-fix diffs + manual refactoring plans
+
 
   > Refactor Agent Generating code fixes and refactoring plans...
   ------------------------------------------------------------
-  [OK] Refactor Agent completed -- 34 findings -- 0.00s
+  [OK] Refactor Agent completed -- 32 findings -- 0.00s
 
   [FILE] user_service.py
   --- original
@@ -90,103 +129,155 @@ flow
   +++ suggested
     + except Exception as e:
 
+  Auto-fixes generated   : 8
+  Manual suggestions     : 24
 
-  Refactoring Summary:
-    Auto-fixes: 8
-    Manual suggestions: 26
+  [AUTO-FIX] user_service.py:34 (critical, status=approved)
+    --- """Process a batch of users with complex nested logic."""
+    +++         # FIXED: Use parameterized query to prevent SQL injection         c
 
-  📝 user_service.py:34
-  ---         """Process a batch of users with complex nested logic."""
-  +++         # FIXED: Use parameterized query to prevent SQL injection
-    
-  Status: approved
+  [AUTO-FIX] utils.py:54 (critical, status=approved)
+    --- except:
+    +++     except Exception as e:
 
-  📝 utils.py:54
-  ---     except:
-  +++     except Exception as e:
-  Status: approved
+  [AUTO-FIX] payment.py:16 (critical, status=approved)
+    --- except:
+    +++         except Exception as e:
 
-  📝 payment.py:16
-  ---         except:
-  +++         except Exception as e:
-  Status: approved
+  [AUTO-FIX] user_service.py:29 (critical, status=approved)
+    --- except:
+    +++         except Exception as e:
 
-  ╔══ Stage 4: Validator Agent ═══════════════════╗
+  [AUTO-FIX] user_service.py:18 (critical, status=approved)
+    --- self.cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    +++         # FIXED: Use parameterized query to prevent SQL injection         c
+
+  [AUTO-FIX] user_service.py:67 (critical, status=approved)
+    --- except:
+    +++     except Exception as e:
+
+  [AUTO-FIX] user_service.py:53 (medium, status=approved)
+    --- def find_user(self, filters=[]):  # ISSUE: Mutable default argument
+    +++     def find_user(None):         if x is None:             x = []
+
+  [AUTO-FIX] utils.py:31 (medium, status=approved)
+    --- def get_cached_value(key, data={}):  # ISSUE: Mutable default argument
+    +++ def get_cached_value(None):     if x is None:         x = []
+
+  [MANUAL]  payment.py:12 (effort: 4-8 hours)
+    Plan: Use environment variables or secrets manager.
+
+  [MANUAL]  utils.py:39 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  user_service.py:38 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  payment.py:1 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  payment.py:4 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  user_service.py:1 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  user_service.py:10 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  user_service.py:33 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  utils.py:43 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  utils.py:1 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  payment.py:24 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  user_service.py:37 (effort: 2-4 hours)
+    Plan: Use guard clauses to flatten nesting.
+
+  [MANUAL]  payment.py:20 (effort: 1-2 hours)
+    Plan: Group related parameters into a dataclass.
+
+  [MANUAL]  user_service.py:21 (effort: 1-2 hours)
+    Plan: Group related parameters into a dataclass.
+
+  [MANUAL]  utils.py:39 (effort: 1-2 hours)
+    Plan: Group related parameters into a dataclass.
+
+  [MANUAL]  utils.py:61 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  payment.py:36 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  payment.py:37 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  user_service.py:57 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  utils.py:59 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  payment.py:35 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  user_service.py:58 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  user_service.py:59 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+  [MANUAL]  utils.py:60 (effort: 30-60 min)
+    Plan: Review and either complete the task or create a ticket.
+
+
+  STAGE 4/4 -- VALIDATOR AGENT
+  ====================================================================
+  Task: Run tests & verify refactoring safety (closed-loop validation)
+
 
   > Validator Agent Running tests and validating changes...
   ------------------------------------------------------------
-  [OK] Validator Agent [✓ PASSED] completed -- 1 findings -- 0.01s
-
-  Validation: ✅ PASSED
-  Existing tests: ✅
-  Auto-generated tests: —
-  Recommendation: ✅ All tests pass. Auto-fixes are safe to merge. Manual 
-refactorings should undergo code review.
-
-  ╔══ Final Report ════════════════════════════════╗
-
-                           CodeGuard Analysis Report                           
-┌─────────┬──────────────────────────┬───────────────────────────┬────┬───────┐
-│ Severi… │ Pattern                  │ File                      │ L… │ Auto… │
-├─────────┼──────────────────────────┼───────────────────────────┼────┼───────┤
-│ CRITIC… │ SQL Injection Risk       │ user_service.py           │ 34 │  [Y]  │
-│ CRITIC… │ Bare Except Clause       │ utils.py                  │ 54 │  [Y]  │
-│ CRITIC… │ Bare Except Clause       │ payment.py                │ 16 │  [Y]  │
-│ CRITIC… │ Bare Except Clause       │ user_service.py           │ 29 │  [Y]  │
-│ CRITIC… │ SQL Injection Risk       │ user_service.py           │ 18 │  [Y]  │
-│ CRITIC… │ Bare Except Clause       │ user_service.py           │ 67 │  [Y]  │
-│ CRITIC… │ Hardcoded Secret         │ payment.py                │ 12 │   -   │
-│ HIGH    │ Deeply Nested Code       │ utils.py                  │ 39 │   -   │
-│ MEDIUM  │ Mutable Default Argument │ user_service.py           │ 53 │  [Y]  │
-│ HIGH    │ Deeply Nested Code       │ user_service.py           │ 38 │   -   │
-│ HIGH    │ Deeply Nested Code       │ tests\test_codeguard_val… │  1 │   -   │
-│ HIGH    │ Deeply Nested Code       │ payment.py                │  1 │   -   │
-│ HIGH    │ Deeply Nested Code       │ payment.py                │  4 │   -   │
-│ HIGH    │ Deeply Nested Code       │ tests\test_codeguard_val… │ 50 │   -   │
-│ HIGH    │ Deeply Nested Code       │ user_service.py           │  1 │   -   │
-│ HIGH    │ Deeply Nested Code       │ user_service.py           │ 10 │   -   │
-│ HIGH    │ Deeply Nested Code       │ user_service.py           │ 33 │   -   │
-│ HIGH    │ Deeply Nested Code       │ utils.py                  │ 43 │   -   │
-│ HIGH    │ Deeply Nested Code       │ utils.py                  │  1 │   -   │
-│ HIGH    │ Deeply Nested Code       │ payment.py                │ 24 │   -   │
-│ MEDIUM  │ Mutable Default Argument │ utils.py                  │ 31 │  [Y]  │
-│ HIGH    │ Deeply Nested Code       │ user_service.py           │ 37 │   -   │
-│ MEDIUM  │ Too Many Parameters      │ payment.py                │ 20 │   -   │
-│ MEDIUM  │ Too Many Parameters      │ user_service.py           │ 21 │   -   │
-│ MEDIUM  │ Too Many Parameters      │ utils.py                  │ 39 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ utils.py                  │ 61 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ payment.py                │ 36 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ payment.py                │ 37 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ user_service.py           │ 57 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ utils.py                  │ 59 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ payment.py                │ 35 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ user_service.py           │ 58 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ user_service.py           │ 59 │   -   │
-│ LOW     │ Unresolved TODO/FIXME    │ utils.py                  │ 60 │   -   │
-│         │                          │                           │    │       │
-│ TOTAL:  │ 7 critical  13 high  5   │                           │    │       │
-│ 34      │ medium                   │                           │    │       │
-└─────────┴──────────────────────────┴───────────────────────────┴────┴───────┘
-
-┌─────────────── [COST] API Cost ────────────────┐
-│ Token Usage: 12,500 prompt + 4,200 completion  │
-│ = 16,700 total                                 │
-│ Estimated Cost: $0.8500                        │
-└────────────────────────────────────────────────┘
-
-┌──────────────── 📊 Deployment Scale ────────────────┐
-│ Estimated monthly token consumption (20-person      │
-│ team):                                              │
-│ ~500万 tokens/day across all agents                 │
-│ Scanner: ~120万 · Analyzer: ~150万 · Refactor:      │
-│ ~180万 · Validator: ~50万                           │
-└─────────────────────────────────────────────────────┘
-
-  Total pipeline duration: 1.61s
-
-  [DONE] CodeGuard analysis complete!
+  [OK] Validator Agent [[PASS]] completed -- 1 findings -- 0.01s
+  Validation result  : PASSED
+  Existing tests     : passed
+  Recommendation     : [PASS] All tests pass. Auto-fixes are safe to merge. Manual refactorings should undergo code review.
 
 
-  💡 To save this output as a terminal log:
-     python demo/run_demo.py > docs/terminal-log.txt
+  FINAL REPORT
+  ====================================================================
+
+  Category                Count   Risk Score    Auto-Fix
+  -------------------- -------- ------------  ----------
+  Security                    3         45.4           2
+  Complexity                 14         67.8           0
+  Error Handling              4         71.2           4
+  Maintainability            11         18.5           2
+  -------------------- -------- ------------  ----------
+  TOTAL                      32        202.9           8
+
+  Estimated API Usage (this run):
+    Prompt tokens     : 10,240
+    Completion tokens : 5,760
+    Total tokens      : 16,000
+    Estimated cost    : $0.1171
+
+  Deployment Scale (20-person backend team, 3 squads):
+    Daily token consumption    : ~5,200,000 (520 wan)
+    Scanner Agent              : ~1,200,000 tokens/day
+    Analyzer Agent             : ~1,500,000 tokens/day
+    Refactor Agent             : ~1,800,000 tokens/day
+    Validator Agent            : ~700,000 tokens/day
+    Efficiency improvement     : ~80% (code standard review)
+
+  Total pipeline duration: 0.04s
+
+  CODE GUARD ANALYSIS COMPLETE.
+  ==================================================================
 

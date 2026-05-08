@@ -53,7 +53,7 @@ class ValidatorAgent:
         duration = time.time() - start
         self.validation_passed = self._check_pass()
 
-        status_icon = "[bold green]✓ PASSED" if self.validation_passed else "[bold red]✗ FAILED"
+        status_icon = "[PASS]" if self.validation_passed else "[FAIL]"
         display.agent_result(f"Validator Agent [{status_icon}]", 1, duration)
 
         return self._build_result()
@@ -251,11 +251,11 @@ if __name__ == "__main__":
     def _recommendation(self) -> str:
         if self.validation_passed:
             return (
-                "✅ All tests pass. Auto-fixes are safe to merge. "
+                "[PASS] All tests pass. Auto-fixes are safe to merge. "
                 "Manual refactorings should undergo code review."
             )
         else:
-            return "❌ Some tests failed. Review the failing changes before merging."
+            return "[FAIL] Some tests failed. Review the failing changes before merging."
 
     def _build_result(self) -> dict[str, Any]:
         return {
@@ -268,9 +268,9 @@ if __name__ == "__main__":
     def get_test_summary(self) -> str:
         """Return a human-readable test summary."""
         lines = []
-        lines.append(f"  Validation: {'✅ PASSED' if self.validation_passed else '❌ FAILED'}")
-        lines.append(f"  Existing tests: {'✅' if self.test_results.get('passed') else '❌'}")
+        lines.append(f"  Validation: {'[PASS]' if self.validation_passed else '[FAIL]'}")
+        lines.append(f"  Existing tests: {'[pass]' if self.test_results.get('passed') else '[fail]'}")
         auto = self.test_results.get("auto_generated", {})
-        lines.append(f"  Auto-generated tests: {'✅' if auto.get('passed') else '❌' if auto.get('passed') is False else '—'}")
+        lines.append(f"  Auto-generated tests: {'[pass]' if auto.get('passed') else '[fail]' if auto.get('passed') is False else '[N/A]'}")
         lines.append(f"  Recommendation: {self._recommendation()}")
         return "\n".join(lines)

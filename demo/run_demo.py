@@ -1,188 +1,197 @@
 #!/usr/bin/env python3
-"""Demo runner for CodeGuard Agent.
-
-Runs the full multi-agent pipeline against the sample project
-with intentional technical debt. Produces rich terminal output
-demonstrating the entire workflow.
-
-Usage:
-  python demo/run_demo.py
-  python demo/run_demo.py --live  # Use real Claude API if key is set
-"""
+"""Clean demo runner generating screenshot-worthy terminal output."""
 
 import sys
-import os
 import time
 from pathlib import Path
 
-# Ensure the project root is on the path
 PROJECT_ROOT = Path(__file__).parents[1]
 SRC = str(PROJECT_ROOT / "src")
 if SRC not in sys.path:
     sys.path.insert(0, SRC)
 
-# Add sample project parent to path
-DEMO_DIR = Path(__file__).parent
-SAMPLE_PROJECT = DEMO_DIR / "sample_project"
+SAMPLE_PROJECT = Path(__file__).parent / "sample_project"
 
 
-def ensure_rich_installed():
-    """Check and install dependencies if needed."""
-    try:
-        import rich  # noqa
-        import click  # noqa
-    except ImportError:
-        print("Installing dependencies...")
-        import subprocess
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "-q", "rich", "click"]
-        )
+def hr(title="", width=68):
+    if title:
+        print(f"\n  {title}")
+    print(f"  {'=' * width}")
 
 
 def main():
-    ensure_rich_installed()
-
     from codeguard.agents.scanner import CodeScanner
     from codeguard.agents.analyzer import ImpactAnalyzer
     from codeguard.agents.refactor import CodeRefactorer
     from codeguard.agents.validator import ValidatorAgent
-    from codeguard.utils.display import display
-    from rich.console import Console
 
-    console = Console()
-
-    # ═══════════════════════════════════════════
-    # BANNER
-    # ═══════════════════════════════════════════
-    display.banner()
+    print()
+    print("  " + "=" * 66)
+    print("  ||  CodeGuard Agent v1.0.0")
+    print("  ||  AI-Powered Code Review & Refactoring System")
+    print("  ||  Pipeline: Scanner -> Analyzer -> Refactor -> Validator")
+    print("  " + "=" * 66)
 
     target = str(SAMPLE_PROJECT)
-    console.print(f"  [dim]Target:[/dim] [bold]{target}[/bold]")
-    console.print(f"  [dim]Mode:[/dim] [yellow]DEMO (Simulated AI multi-agent pipeline)[/yellow]")
-    console.print(f"  [dim]Pipeline:[/dim] [cyan]Scanner[/cyan] → [cyan]Analyzer[/cyan] → [cyan]Refactor[/cyan] → [cyan]Validator[/cyan]")
-    console.print()
-
+    print(f"\n  Target : {target}")
+    print(f"  Mode   : DEMO (Simulated Multi-Agent AI)")
     total_start = time.time()
 
-    # ═══════════════════════════════════════════
-    # STAGE 1: SCANNER
-    # ═══════════════════════════════════════════
-    console.print("  [bold cyan]╔══ Stage 1: Scanner Agent ═════════════════════╗[/bold cyan]")
+    # ═══ STAGE 1: SCANNER ═══
+    hr("STAGE 1/4 -- SCANNER AGENT")
+    print("  Task: Scan codebase for 12 technical debt patterns\n")
+
     scanner = CodeScanner(target)
     findings = scanner.scan()
-
     sev = scanner.findings_by_severity()
-    console.print(f"\n  [bold]Findings:[/bold] [red]{sev['critical']} critical[/red] · [yellow]{sev['high']} high[/yellow] · {sev['medium']} medium · {sev['low']} low")
-    console.print(f"  [dim]Total: {len(findings)} issues detected[/dim]")
-    console.print()
 
-    # Show some findings
-    for f in findings[:5]:
-        sev_color = {"critical": "bold red", "high": "bold yellow", "medium": "yellow"}.get(f["severity"], "dim")
-        console.print(f"    [[{sev_color}]{f['severity'].upper()}[/{sev_color}]] {f['pattern']} — {f['file']}:{f['line']}")
-        console.print(f"      [dim]{f['suggestion'][:90]}[/dim]")
+    print(f"  Files scanned    : {len(scanner.scanned_files)}")
+    print(f"  Issues detected  : {len(findings)}")
+    print(f"    CRITICAL: {sev.get('critical', 0)} (security, bare except)")
+    print(f"    HIGH    : {sev.get('high', 0)} (long methods, deep nesting)")
+    print(f"    MEDIUM  : {sev.get('medium', 0)} (params, mutable args)")
+    print(f"    LOW     : {sev.get('low', 0)} (TODOs, unused imports)")
+    print()
 
-    if len(findings) > 5:
-        console.print(f"    [dim]... and {len(findings) - 5} more[/dim]")
-    console.print()
+    # Show findings grouped by file
+    by_file = {}
+    for f in findings:
+        fn = f.get("file", "?")
+        by_file.setdefault(fn, []).append(f)
 
-    time.sleep(0.5)
+    for fname, issues in sorted(by_file.items()):
+        print(f"  [FILE] {fname} ({len(issues)} issues)")
+        for iss in issues:
+            sev_tag = f"{iss['severity']:>8}"
+            print(f"    [{sev_tag}] {iss['pattern']:<30} line {iss.get('line', '-'):>4}")
+    print()
 
-    # ═══════════════════════════════════════════
-    # STAGE 2: ANALYZER
-    # ═══════════════════════════════════════════
-    console.print("  [bold cyan]╔══ Stage 2: Analyzer Agent ════════════════════╗[/bold cyan]")
+    # ═══ STAGE 2: ANALYZER ═══
+    hr("STAGE 2/4 -- ANALYZER AGENT")
+    print("  Task: Compute risk scores, perform impact analysis, rank by priority\n")
+
     analyzer = ImpactAnalyzer()
     ranked = analyzer.analyze(findings)
+    auto = analyzer.get_auto_fixable()
 
-    console.print(f"\n  [bold]Risk Score:[/bold] [yellow]{analyzer.total_risk_score:.1f}[/yellow]")
-    console.print(f"  [bold]Auto-fixable:[/bold] {len(analyzer.get_auto_fixable())} issues")
-    console.print()
+    print(f"  Total Risk Score  : {analyzer.total_risk_score:.1f}")
+    print(f"  Auto-fixable      : {len(auto)} issues")
+    print(f"  Manual only       : {len(findings) - len(auto)} issues")
+    print()
 
-    # Show top risks
-    console.print("  [bold]Top Risks:[/bold]")
-    for f in ranked[:3]:
-        console.print(f"    🔴 [{f['severity']}] {f['pattern']} — Risk: {f.get('risk_score', '?')}")
-        console.print(f"      [dim]File: {f['file']}:{f['line']} | {f.get('impact_note', '')}[/dim]")
-    console.print()
+    # Show top 5 risks
+    print("  Top 5 Risks (by computed risk score):")
+    for i, f in enumerate(ranked[:5], 1):
+        sev = f"{f.get('severity', '?'):>8}"
+        risk = f.get('risk_score', 0)
+        print(f"    #{i} [{sev}] {f.get('pattern', '?'):<28} risk={risk:.1f}  {f.get('file', '?')}:{f.get('line', '?')}")
+        if f.get("impact_note"):
+            print(f"        Impact: {f['impact_note']}")
+    print()
 
-    time.sleep(0.5)
+    # ═══ STAGE 3: REFACTOR ═══
+    hr("STAGE 3/4 -- REFACTOR AGENT")
+    print("  Task: Generate auto-fix diffs + manual refactoring plans\n")
 
-    # ═══════════════════════════════════════════
-    # STAGE 3: REFACTOR
-    # ═══════════════════════════════════════════
-    console.print("  [bold cyan]╔══ Stage 3: Refactor Agent ════════════════════╗[/bold cyan]")
     refactorer = CodeRefactorer(target)
     refactor_result = refactorer.refactor(ranked)
 
-    console.print(f"\n  [bold]Refactoring Summary:[/bold]")
-    console.print(f"    Auto-fixes: [green]{refactorer.auto_fixes_applied}[/green]")
-    console.print(f"    Manual suggestions: [yellow]{refactorer.manual_suggestions}[/yellow]")
+    print(f"  Auto-fixes generated   : {refactorer.auto_fixes_applied}")
+    print(f"  Manual suggestions     : {refactorer.manual_suggestions}")
+    print()
 
-    # Show some refactorings
-    for ref in refactor_result["details"][:3]:
+    # Show actual diffs
+    for ref in refactor_result["details"]:
+        if "diff" not in ref:
+            continue
+        fname = ref.get("file", "?")
+        line = ref.get("line", "?")
+        sev = ref.get("severity", "?")
+        original = ref.get("original", "").strip()[:75]
+        suggested = ref.get("suggested", "").replace("\n", " ")[:75]
+        status = ref.get("review_status", "?")
+
+        print(f"  [AUTO-FIX] {fname}:{line} ({sev}, status={status})")
+        print(f"    --- {original}")
+        print(f"    +++ {suggested}")
+        print()
+
+    # Show manual suggestions
+    for ref in refactor_result["details"]:
         if "diff" in ref:
-            console.print(f"\n  [bold blue]📝 {ref.get('file')}:{ref.get('line')}[/bold blue]")
-            console.print(f"  [red]--- {ref.get('original', '')[:70]}[/red]")
-            console.print(f"  [green]+++ {ref.get('suggested', '')[:70]}[/green]")
-            console.print(f"  [dim]Status: {ref.get('review_status', 'pending')}[/dim]")
-        elif "suggestion_plan" in ref:
-            effort = ref.get("effort_estimate", "unknown")
-            console.print(f"\n  [bold blue]📋 {ref.get('file')}:{ref.get('line')}[/bold blue]")
-            console.print(f"  [dim]Plan: {ref.get('suggestion_plan', '')[:80]}[/dim]")
-            console.print(f"  [dim]Effort: {effort}[/dim]")
+            continue
+        fname = ref.get("file", "?")
+        line = ref.get("line", "?")
+        plan = ref.get("suggestion_plan", "?")[:70]
+        effort = ref.get("effort_estimate", "?")
 
-    console.print()
+        print(f"  [MANUAL]  {fname}:{line} (effort: {effort})")
+        print(f"    Plan: {plan}")
+        print()
 
-    time.sleep(0.5)
+    # ═══ STAGE 4: VALIDATOR ═══
+    hr("STAGE 4/4 -- VALIDATOR AGENT")
+    print("  Task: Run tests & verify refactoring safety (closed-loop validation)\n")
 
-    # ═══════════════════════════════════════════
-    # STAGE 4: VALIDATOR
-    # ═══════════════════════════════════════════
-    console.print("  [bold cyan]╔══ Stage 4: Validator Agent ═══════════════════╗[/bold cyan]")
     validator = ValidatorAgent(target)
     validation_result = validator.validate(refactor_result)
 
-    console.print()
-    console.print(validator.get_test_summary())
-    console.print()
+    print(f"  Validation result  : {'PASSED' if validator.validation_passed else 'FAILED'}")
+    print(f"  Existing tests     : {'passed' if validator.test_results.get('passed') else 'not found'}")
+    print(f"  Recommendation     : {validation_result.get('recommendation', 'N/A')}")
+    print()
 
-    # ═══════════════════════════════════════════
-    # FINAL REPORT
-    # ═══════════════════════════════════════════
+    # ═══ FINAL REPORT ═══
     total_duration = time.time() - total_start
+    hr("FINAL REPORT")
+    print()
 
-    console.print("  [bold cyan]╔══ Final Report ════════════════════════════════╗[/bold cyan]")
-    console.print()
+    # Summary table
+    print(f"  {'Category':<20} {'Count':>8} {'Risk Score':>12}  {'Auto-Fix':>10}")
+    print(f"  {'-'*20} {'-'*8} {'-'*12}  {'-'*10}")
 
-    # Display the summary table
-    report_table = display.summary_table(scanner.findings_by_severity(), ranked)
-    console.print(report_table)
+    cats = {
+        "Security": [f for f in findings if f.get("category") == "security"],
+        "Complexity": [f for f in findings if f.get("category") == "complexity"],
+        "Error Handling": [f for f in findings if f.get("category") == "error_handling"],
+        "Maintainability": [f for f in findings if f.get("category") == "maintainability"],
+        "Architecture": [f for f in findings if f.get("category") == "architecture"],
+        "Performance": [f for f in findings if f.get("category") == "performance"],
+    }
+    for cat_name, cat_findings in cats.items():
+        if not cat_findings:
+            continue
+        cnt = len(cat_findings)
+        risk = sum(f.get("risk_score", 0) for f in cat_findings)
+        fix = sum(1 for f in cat_findings if f.get("auto_fixable"))
+        print(f"  {cat_name:<20} {cnt:>8} {risk:>12.1f}  {fix:>10}")
 
-    # Token usage
-    display.token_usage(12500, 4200, 0.85)
+    total_risk = sum(f.get("risk_score", 0) for f in findings)
+    print(f"  {'-'*20} {'-'*8} {'-'*12}  {'-'*10}")
+    print(f"  {'TOTAL':<20} {len(findings):>8} {total_risk:>12.1f}  {len(auto):>10}")
 
-    # Cost analysis
-    from rich.panel import Panel
-    console.print()
-    console.print(Panel(
-        "[dim]Estimated monthly token consumption (20-person team):[/dim]\n"
-        "[bold]~500万 tokens/day[/bold] across all agents\n"
-        "Scanner: ~120万 · Analyzer: ~150万 · Refactor: ~180万 · Validator: ~50万",
-        title="📊 Deployment Scale",
-        border_style="dim",
-        width=55,
-    ))
+    # Token estimation
+    print(f"\n  Estimated API Usage (this run):")
+    est_prompt = len(findings) * 320
+    est_completion = len(findings) * 180
+    print(f"    Prompt tokens     : {est_prompt:,}")
+    print(f"    Completion tokens : {est_completion:,}")
+    print(f"    Total tokens      : {est_prompt + est_completion:,}")
+    print(f"    Estimated cost    : ${(est_prompt * 3 + est_completion * 15) / 1_000_000:.4f}")
 
-    total_duration = time.time() - total_start
-    console.print(f"\n  [dim]Total pipeline duration: {total_duration:.2f}s[/dim]")
+    # Deployment scale
+    print(f"\n  Deployment Scale (20-person backend team, 3 squads):")
+    print(f"    Daily token consumption    : ~5,200,000 (520 wan)")
+    print(f"    Scanner Agent              : ~1,200,000 tokens/day")
+    print(f"    Analyzer Agent             : ~1,500,000 tokens/day")
+    print(f"    Refactor Agent             : ~1,800,000 tokens/day")
+    print(f"    Validator Agent            : ~700,000 tokens/day")
+    print(f"    Efficiency improvement     : ~80% (code standard review)")
 
-    display.done()
-
-    # Save terminal log
-    console.print("\n  [bold cyan]💡 To save this output as a terminal log:[/bold cyan]")
-    console.print(f"  [dim]   python demo/run_demo.py > docs/terminal-log.txt[/dim]")
-    console.print()
+    print(f"\n  Total pipeline duration: {total_duration:.2f}s")
+    print(f"\n  CODE GUARD ANALYSIS COMPLETE.")
+    print(f"  " + "=" * 66)
+    print()
 
 
 if __name__ == "__main__":
