@@ -1,0 +1,1 @@
+"""Sample project with intentional technical debt for demonstration."""

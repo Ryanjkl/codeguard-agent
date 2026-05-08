@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.vscode/
+.idea/
+.env
+venv/
+*.db
+codeguard-report.json
+tests/codeguard_validation/
+demo/sample_project/tests/
